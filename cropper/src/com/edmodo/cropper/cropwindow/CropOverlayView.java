@@ -43,6 +43,7 @@ public class CropOverlayView extends View {
     private static final float DEFAULT_SHOW_GUIDELINES_LIMIT = 100;
 
     // mGuidelines enumerations
+    @SuppressWarnings("unused")
     private static final int GUIDELINES_OFF = 0;
     private static final int GUIDELINES_ON_TOUCH = 1;
     private static final int GUIDELINES_ON = 2;
@@ -61,17 +62,6 @@ public class CropOverlayView extends View {
     // The Paint used to darken the surrounding areas outside the crop area.
     private Paint mSurroundingAreaOverlayPaint;
 
-    // How much to offset the line when drawing the corner handles.
-    private float mCornerOffset;
-
-    private float mCornerExtension;
-
-    // Length of one side of the corner handle.
-    private float mCornerLength;
-
-    // The bounding box around the Bitmap that we are cropping.
-    private Rect mBitmapRect;
-
     // The radius (in pixels) of the touchable area around the handle.
     // We are basing this value off of the recommended 48dp Rhythm.
     // See: http://developer.android.com/design/style/metrics-grids.html#48dp-rhythm
@@ -81,6 +71,18 @@ public class CropOverlayView extends View {
     // specified bounding box when the crop window edge is less than or equal to
     // this distance (in pixels) away from the bounding box edge.
     private float mSnapRadius;
+
+    // Thickness of the line (in pixels) used to draw the corner handle.
+    private float mCornerThickness;
+
+    // Thickness of the line (in pixels) used to draw the border of the crop window.
+    private float mBorderThickness;
+
+    // Length of one side of the corner handle.
+    private float mCornerLength;
+
+    // The bounding box around the Bitmap that we are cropping.
+    private Rect mBitmapRect;
 
     // Holds the x and y offset between the exact touch location and the exact
     // handle location that is activated. There may be an offset because we
@@ -139,10 +141,8 @@ public class CropOverlayView extends View {
         mHandleRadius = resources.getDimension(R.dimen.target_radius);
         mSnapRadius = resources.getDimension(R.dimen.snap_radius);
 
-        final float cornerThickness = resources.getDimension(R.dimen.corner_thickness);
-        final float borderThickness = resources.getDimension(R.dimen.border_thickness);
-        mCornerOffset = (cornerThickness - borderThickness) / 2f;
-        mCornerExtension = cornerThickness / 2f + mCornerOffset;
+        mBorderThickness = resources.getDimension(R.dimen.border_thickness);
+        mCornerThickness = resources.getDimension(R.dimen.corner_thickness);
         mCornerLength = resources.getDimension(R.dimen.corner_length);
 
         // Sets guidelines to default until specified otherwise
@@ -173,9 +173,7 @@ public class CropOverlayView extends View {
                 // Draw only when resizing
                 if (mPressedHandle != null)
                     drawRuleOfThirdsGuidelines(canvas);
-            } else if (mGuidelines == GUIDELINES_OFF) {
-                // Do nothing
-            }
+            } // else if (mGuidelines == GUIDELINES_OFF) { do nothing }
         }
 
         // Draws the main crop window border.
@@ -364,8 +362,9 @@ public class CropOverlayView extends View {
 
         // Tells the attribute functions the crop window has already been
         // initialized
-        if (initializedCropWindow == false)
+        if (!initializedCropWindow) {
             initializedCropWindow = true;
+        }
 
         if (mFixAspectRatio) {
 
@@ -507,48 +506,30 @@ public class CropOverlayView extends View {
         final float right = Edge.RIGHT.getCoordinate();
         final float bottom = Edge.BOTTOM.getCoordinate();
 
-        // Draws the corner lines
+        // Absolute value of the offset by which to draw the corner line such that its inner edge is flush with the border's inner edge.
+        final float lateralOffset = (mCornerThickness - mBorderThickness) / 2f;
+        // Absolute value of the offset by which to start the corner line such that the line is drawn all the way to form a corner edge with the adjacent side.
+        final float startOffset = mCornerThickness - (mBorderThickness / 2f);
 
-        // Top left
-        canvas.drawLine(left - mCornerOffset,
-                        top - mCornerExtension,
-                        left - mCornerOffset,
-                        top + mCornerLength,
-                        mCornerPaint);
-        canvas.drawLine(left, top - mCornerOffset, left + mCornerLength, top - mCornerOffset, mCornerPaint);
+        // Top-left corner: left side
+        canvas.drawLine(left - lateralOffset, top - startOffset, left - lateralOffset, top + mCornerLength, mCornerPaint);
+        // Top-left corner: top side
+        canvas.drawLine(left - startOffset, top - lateralOffset, left + mCornerLength, top - lateralOffset, mCornerPaint);
 
-        // Top right
-        canvas.drawLine(right + mCornerOffset,
-                        top - mCornerExtension,
-                        right + mCornerOffset,
-                        top + mCornerLength,
-                        mCornerPaint);
-        canvas.drawLine(right, top - mCornerOffset, right - mCornerLength, top - mCornerOffset, mCornerPaint);
+        // Top-right corner: right side
+        canvas.drawLine(right + lateralOffset, top - startOffset, right + lateralOffset, top + mCornerLength, mCornerPaint);
+        // Top-right corner: top side
+        canvas.drawLine(right + startOffset, top - lateralOffset, right - mCornerLength, top - lateralOffset, mCornerPaint);
 
-        // Bottom left
-        canvas.drawLine(left - mCornerOffset,
-                        bottom + mCornerExtension,
-                        left - mCornerOffset,
-                        bottom - mCornerLength,
-                        mCornerPaint);
-        canvas.drawLine(left,
-                        bottom + mCornerOffset,
-                        left + mCornerLength,
-                        bottom + mCornerOffset,
-                        mCornerPaint);
+        // Bottom-left corner: left side
+        canvas.drawLine(left - lateralOffset, bottom + startOffset, left - lateralOffset, bottom - mCornerLength, mCornerPaint);
+        // Bottom-left corner: bottom side
+        canvas.drawLine(left - startOffset, bottom + lateralOffset, left + mCornerLength, bottom + lateralOffset, mCornerPaint);
 
-        // Bottom left
-        canvas.drawLine(right + mCornerOffset,
-                        bottom + mCornerExtension,
-                        right + mCornerOffset,
-                        bottom - mCornerLength,
-                        mCornerPaint);
-        canvas.drawLine(right,
-                        bottom + mCornerOffset,
-                        right - mCornerLength,
-                        bottom + mCornerOffset,
-                        mCornerPaint);
-
+        // Bottom-right corner: right side
+        canvas.drawLine(right + lateralOffset, bottom + startOffset, right + lateralOffset, bottom - mCornerLength, mCornerPaint);
+        // Bottom-right corner: bottom side
+        canvas.drawLine(right + startOffset, bottom + lateralOffset, right - mCornerLength, bottom + lateralOffset, mCornerPaint);
     }
 
     /**
