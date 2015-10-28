@@ -234,8 +234,6 @@ public class CropImageView extends FrameLayout {
 
     /**
      * Returns the integer of the imageResource
-     * 
-     * @param int the image resource id
      */
     public int getImageResource() {
         return mImageResource;
