@@ -23,6 +23,8 @@ import android.graphics.RectF;
 import android.media.ExifInterface;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -45,14 +47,6 @@ public class CropImageView extends FrameLayout {
 
     // Member Variables ////////////////////////////////////////////////////////
 
-    // Sets the default image guidelines to show when resizing
-    public static final int DEFAULT_GUIDELINES = 1;
-    public static final boolean DEFAULT_FIXED_ASPECT_RATIO = false;
-    public static final int DEFAULT_ASPECT_RATIO_X = 1;
-    public static final int DEFAULT_ASPECT_RATIO_Y = 1;
-
-    private static final int DEFAULT_IMAGE_RESOURCE = 0;
-
     private static final String DEGREES_ROTATED = "DEGREES_ROTATED";
 
     private ImageView mImageView;
@@ -65,36 +59,51 @@ public class CropImageView extends FrameLayout {
     private int mLayoutHeight;
 
     // Instance variables for customizable attributes
-    private int mGuidelines = DEFAULT_GUIDELINES;
-    private boolean mFixAspectRatio = DEFAULT_FIXED_ASPECT_RATIO;
-    private int mAspectRatioX = DEFAULT_ASPECT_RATIO_X;
-    private int mAspectRatioY = DEFAULT_ASPECT_RATIO_Y;
-    private int mImageResource = DEFAULT_IMAGE_RESOURCE;
+    private int mGuidelines = 1;
+    private boolean mFixAspectRatio;
+    private int mAspectRatioX = 1;
+    private int mAspectRatioY = 1;
+    private int mImageResource;
 
     // Constructors ////////////////////////////////////////////////////////////
 
     public CropImageView(Context context) {
         super(context);
-        init(context);
+        init(context, null);
     }
 
     public CropImageView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        init(context, attrs);
+    }
 
-        TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.CropImageView, 0, 0);
+    public CropImageView(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        init(context, attrs);
+    }
+
+    private void init(@NonNull Context context, @Nullable AttributeSet attrs) {
+
+        final LayoutInflater inflater = LayoutInflater.from(context);
+        final View v = inflater.inflate(R.layout.crop_image_view, this, true);
+
+        mImageView = (ImageView) v.findViewById(R.id.ImageView_image);
+        mCropOverlayView = (CropOverlayView) v.findViewById(R.id.CropOverlayView);
+
+        final TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.CropImageView, 0, 0);
 
         try {
-            mGuidelines = ta.getInteger(R.styleable.CropImageView_guidelines, DEFAULT_GUIDELINES);
-            mFixAspectRatio = ta.getBoolean(R.styleable.CropImageView_fixAspectRatio,
-                                            DEFAULT_FIXED_ASPECT_RATIO);
-            mAspectRatioX = ta.getInteger(R.styleable.CropImageView_aspectRatioX, DEFAULT_ASPECT_RATIO_X);
-            mAspectRatioY = ta.getInteger(R.styleable.CropImageView_aspectRatioY, DEFAULT_ASPECT_RATIO_Y);
-            mImageResource = ta.getResourceId(R.styleable.CropImageView_imageResource, DEFAULT_IMAGE_RESOURCE);
+            mGuidelines = ta.getInteger(R.styleable.CropImageView_guidelines, 1);
+            mFixAspectRatio = ta.getBoolean(R.styleable.CropImageView_fixAspectRatio, false);
+            mAspectRatioX = ta.getInteger(R.styleable.CropImageView_aspectRatioX, 1);
+            mAspectRatioY = ta.getInteger(R.styleable.CropImageView_aspectRatioY, 1);
+            mImageResource = ta.getResourceId(R.styleable.CropImageView_imageResource, 0);
         } finally {
             ta.recycle();
         }
 
-        init(context);
+        setImageResource(mImageResource);
+        mCropOverlayView.setInitialAttributeValues(mGuidelines, mFixAspectRatio, mAspectRatioX, mAspectRatioY);
     }
 
     // View Methods ////////////////////////////////////////////////////////////
@@ -241,7 +250,7 @@ public class CropImageView extends FrameLayout {
 
     /**
      * Sets a Bitmap as the content of the CropImageView.
-     * 
+     *
      * @param bitmap the Bitmap to set
      */
     public void setImageBitmap(Bitmap bitmap) {
@@ -256,12 +265,12 @@ public class CropImageView extends FrameLayout {
 
     /**
      * Sets a Bitmap and initializes the image rotation according to the EXIT data.
-     * <p>
-     * The EXIF can be retrieved by doing the following:
-     * <code>ExifInterface exif = new ExifInterface(path);</code>
-     * 
+     * <p/>
+     * The EXIF can be retrieved by doing the following: <code>ExifInterface exif = new
+     * ExifInterface(path);</code>
+     *
      * @param bitmap the original bitmap to set; if null, this
-     * @param exif the EXIF information about this bitmap; may be null
+     * @param exif   the EXIF information about this bitmap; may be null
      */
     public void setImageBitmap(Bitmap bitmap, ExifInterface exif) {
 
@@ -308,7 +317,7 @@ public class CropImageView extends FrameLayout {
 
     /**
      * Sets a Drawable as the content of the CropImageView.
-     * 
+     *
      * @param resId the drawable resource ID to set
      */
     public void setImageResource(int resId) {
@@ -320,7 +329,7 @@ public class CropImageView extends FrameLayout {
 
     /**
      * Gets the cropped image based on the current crop window.
-     * 
+     *
      * @return a new Bitmap representing the cropped image
      */
     public Bitmap getCroppedImage() {
@@ -362,9 +371,9 @@ public class CropImageView extends FrameLayout {
     }
 
     /**
-     * Gets the crop window's position relative to the source Bitmap (not the image
-     * displayed in the CropImageView).
-     * 
+     * Gets the crop window's position relative to the source Bitmap (not the image displayed in the
+     * CropImageView).
+     *
      * @return a RectF instance containing cropped area boundaries of the source Bitmap
      */
     public RectF getActualCropRect() {
@@ -411,30 +420,29 @@ public class CropImageView extends FrameLayout {
     }
 
     /**
-     * Sets whether the aspect ratio is fixed or not; true fixes the aspect ratio, while
-     * false allows it to be changed.
-     * 
-     * @param fixAspectRatio Boolean that signals whether the aspect ratio should be
-     *            maintained.
+     * Sets whether the aspect ratio is fixed or not; true fixes the aspect ratio, while false
+     * allows it to be changed.
+     *
+     * @param fixAspectRatio Boolean that signals whether the aspect ratio should be maintained.
      */
     public void setFixedAspectRatio(boolean fixAspectRatio) {
         mCropOverlayView.setFixedAspectRatio(fixAspectRatio);
     }
 
     /**
-     * Sets the guidelines for the CropOverlayView to be either on, off, or to show when
-     * resizing the application.
-     * 
-     * @param guidelines Integer that signals whether the guidelines should be on, off, or
-     *            only showing when resizing.
+     * Sets the guidelines for the CropOverlayView to be either on, off, or to show when resizing
+     * the application.
+     *
+     * @param guidelines Integer that signals whether the guidelines should be on, off, or only
+     *                   showing when resizing.
      */
     public void setGuidelines(int guidelines) {
-        mCropOverlayView.setGuidelines(guidelines);
+        mCropOverlayView.setGuidelinesMode(guidelines);
     }
 
     /**
      * Sets the both the X and Y values of the aspectRatio.
-     * 
+     *
      * @param aspectRatioX int that specifies the new X value of the aspect ratio
      * @param aspectRatioX int that specifies the new Y value of the aspect ratio
      */
@@ -447,9 +455,8 @@ public class CropImageView extends FrameLayout {
     }
 
     /**
-     * Rotates image by the specified number of degrees clockwise. Cycles from 0 to 360
-     * degrees.
-     * 
+     * Rotates image by the specified number of degrees clockwise. Cycles from 0 to 360 degrees.
+     *
      * @param degrees Integer specifying the number of degrees to rotate.
      */
     public void rotateImage(int degrees) {
@@ -465,25 +472,14 @@ public class CropImageView extends FrameLayout {
 
     // Private Methods /////////////////////////////////////////////////////////
 
-    private void init(Context context) {
-
-        final LayoutInflater inflater = LayoutInflater.from(context);
-        final View v = inflater.inflate(R.layout.crop_image_view, this, true);
-
-        mImageView = (ImageView) v.findViewById(R.id.ImageView_image);
-
-        setImageResource(mImageResource);
-        mCropOverlayView = (CropOverlayView) v.findViewById(R.id.CropOverlayView);
-        mCropOverlayView.setInitialAttributeValues(mGuidelines, mFixAspectRatio, mAspectRatioX, mAspectRatioY);
-    }
-
     /**
-     * Determines the specs for the onMeasure function. Calculates the width or height
-     * depending on the mode.
-     * 
+     * Determines the specs for the onMeasure function. Calculates the width or height depending on
+     * the mode.
+     *
      * @param measureSpecMode The mode of the measured width or height.
      * @param measureSpecSize The size of the measured width or height.
-     * @param desiredSize The desired size of the measured width or height.
+     * @param desiredSize     The desired size of the measured width or height.
+     *
      * @return The final size of the width or height.
      */
     private static int getOnMeasureSpec(int measureSpecMode, int measureSpecSize, int desiredSize) {

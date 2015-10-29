@@ -14,34 +14,34 @@
 package com.edmodo.cropper.cropwindow.handle;
 
 import android.graphics.Rect;
+import android.support.annotation.NonNull;
 
 import com.edmodo.cropper.cropwindow.edge.Edge;
 import com.edmodo.cropper.util.AspectRatioUtil;
 
 /**
- * Handle helper class to handle horizontal handles (i.e. top and bottom
- * handles).
+ * Handle helper class to handle horizontal handles (i.e. top and bottom handles).
  */
 class HorizontalHandleHelper extends HandleHelper {
 
-    // Member Variables ////////////////////////////////////////////////////////
+    // Member Variables ////////////////////////////////////////////////////////////////////////////
 
     private Edge mEdge;
 
-    // Constructor /////////////////////////////////////////////////////////////
+    // Constructor /////////////////////////////////////////////////////////////////////////////////
 
     HorizontalHandleHelper(Edge edge) {
         super(edge, null);
         mEdge = edge;
     }
 
-    // HandleHelper Methods ////////////////////////////////////////////////////
+    // HandleHelper Methods ////////////////////////////////////////////////////////////////////////
 
     @Override
     void updateCropWindow(float x,
                           float y,
                           float targetAspectRatio,
-                          Rect imageRect,
+                          @NonNull Rect imageRect,
                           float snapRadius) {
 
         // Adjust this Edge accordingly.
@@ -67,17 +67,17 @@ class HorizontalHandleHelper extends HandleHelper {
         Edge.RIGHT.setCoordinate(right);
 
         // Check if we have gone out of bounds on the sides, and fix.
-        if (Edge.LEFT.isOutsideMargin(imageRect, snapRadius) && !mEdge.isNewRectangleOutOfBounds(Edge.LEFT,
-                                                                                                 imageRect,
-                                                                                                 targetAspectRatio)) {
+        if (Edge.LEFT.isOutsideMargin(imageRect, snapRadius)
+                && !mEdge.isNewRectangleOutOfBounds(Edge.LEFT, imageRect, targetAspectRatio)) {
+
             final float offset = Edge.LEFT.snapToRect(imageRect);
             Edge.RIGHT.offset(-offset);
             mEdge.adjustCoordinate(targetAspectRatio);
-
         }
-        if (Edge.RIGHT.isOutsideMargin(imageRect, snapRadius) && !mEdge.isNewRectangleOutOfBounds(Edge.RIGHT,
-                                                                                                  imageRect,
-                                                                                                  targetAspectRatio)) {
+
+        if (Edge.RIGHT.isOutsideMargin(imageRect, snapRadius)
+                && !mEdge.isNewRectangleOutOfBounds(Edge.RIGHT, imageRect, targetAspectRatio)) {
+
             final float offset = Edge.RIGHT.snapToRect(imageRect);
             Edge.LEFT.offset(-offset);
             mEdge.adjustCoordinate(targetAspectRatio);

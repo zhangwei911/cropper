@@ -14,6 +14,7 @@
 package com.edmodo.cropper.cropwindow.handle;
 
 import android.graphics.Rect;
+import android.support.annotation.NonNull;
 
 import com.edmodo.cropper.cropwindow.edge.Edge;
 
@@ -22,18 +23,18 @@ import com.edmodo.cropper.cropwindow.edge.Edge;
  */
 class CenterHandleHelper extends HandleHelper {
 
-    // Constructor /////////////////////////////////////////////////////////////
+    // Constructor /////////////////////////////////////////////////////////////////////////////////
 
     CenterHandleHelper() {
         super(null, null);
     }
 
-    // HandleHelper Methods ////////////////////////////////////////////////////
+    // HandleHelper Methods ////////////////////////////////////////////////////////////////////////
 
     @Override
     void updateCropWindow(float x,
                           float y,
-                          Rect imageRect,
+                          @NonNull Rect imageRect,
                           float snapRadius) {
 
         float left = Edge.LEFT.getCoordinate();
@@ -76,7 +77,7 @@ class CenterHandleHelper extends HandleHelper {
     void updateCropWindow(float x,
                           float y,
                           float targetAspectRatio,
-                          Rect imageRect,
+                          @NonNull Rect imageRect,
                           float snapRadius) {
 
         updateCropWindow(x, y, imageRect, snapRadius);

@@ -13,9 +13,9 @@
 
 package com.edmodo.cropper.util;
 
-import android.util.Pair;
+import android.graphics.PointF;
+import android.support.annotation.NonNull;
 
-import com.edmodo.cropper.cropwindow.CropOverlayView;
 import com.edmodo.cropper.cropwindow.handle.Handle;
 
 /**
@@ -23,7 +23,7 @@ import com.edmodo.cropper.cropwindow.handle.Handle;
  */
 public class HandleUtil {
 
-    // Public Methods //////////////////////////////////////////////////////////
+    // Public Methods //////////////////////////////////////////////////////////////////////////////
 
     /**
      * Determines which, if any, of the handles are pressed given the touch coordinates, the
@@ -47,11 +47,13 @@ public class HandleUtil {
                                           float bottom,
                                           float targetRadius) {
 
-        Handle pressedHandle = null;
+        final Handle pressedHandle;
 
-        // Note: corner-handles take precedence, then side-handles, then center.
+        // Note: center handle takes precedence, then corner-handles, then side-handles.
 
-        if (HandleUtil.isInCornerTargetZone(x, y, left, top, targetRadius)) {
+        if (HandleUtil.isInCenterTargetZone(x, y, left, top, right, bottom)) {
+            pressedHandle = Handle.CENTER;
+        } else if (HandleUtil.isInCornerTargetZone(x, y, left, top, targetRadius)) {
             pressedHandle = Handle.TOP_LEFT;
         } else if (HandleUtil.isInCornerTargetZone(x, y, right, top, targetRadius)) {
             pressedHandle = Handle.TOP_RIGHT;
@@ -59,8 +61,6 @@ public class HandleUtil {
             pressedHandle = Handle.BOTTOM_LEFT;
         } else if (HandleUtil.isInCornerTargetZone(x, y, right, bottom, targetRadius)) {
             pressedHandle = Handle.BOTTOM_RIGHT;
-        } else if (HandleUtil.isInCenterTargetZone(x, y, left, top, right, bottom) && focusCenter()) {
-            pressedHandle = Handle.CENTER;
         } else if (HandleUtil.isInHorizontalTargetZone(x, y, left, right, top, targetRadius)) {
             pressedHandle = Handle.TOP;
         } else if (HandleUtil.isInHorizontalTargetZone(x, y, left, right, bottom, targetRadius)) {
@@ -69,9 +69,8 @@ public class HandleUtil {
             pressedHandle = Handle.LEFT;
         } else if (HandleUtil.isInVerticalTargetZone(x, y, right, top, bottom, targetRadius)) {
             pressedHandle = Handle.RIGHT;
-        } else if (HandleUtil.isInCenterTargetZone(x, y, left, top, right, bottom) && !focusCenter()) {
-            pressedHandle = Handle.CENTER;
-
+        } else {
+            pressedHandle = null;
         }
 
         return pressedHandle;
@@ -79,21 +78,18 @@ public class HandleUtil {
 
     /**
      * Calculates the offset of the touch point from the precise location of the specified handle.
-     *
-     * @return the offset as a Pair where the x-offset is the first value and the y-offset is the
-     * second value; null if the handle is null
+     * <p/>
+     * The offset will be returned in the 'touchOffsetOutput' parameter; the x-offset will be the
+     * first value and the y-offset will be the second value.
      */
-    public static Pair<Float, Float> getOffset(Handle handle,
-                                               float x,
-                                               float y,
-                                               float left,
-                                               float top,
-                                               float right,
-                                               float bottom) {
-
-        if (handle == null) {
-            return null;
-        }
+    public static void getOffset(@NonNull Handle handle,
+                                 float x,
+                                 float y,
+                                 float left,
+                                 float top,
+                                 float right,
+                                 float bottom,
+                                 @NonNull PointF touchOffsetOutput) {
 
         float touchOffsetX = 0;
         float touchOffsetY = 0;
@@ -141,10 +137,11 @@ public class HandleUtil {
                 break;
         }
 
-        return new Pair<>(touchOffsetX, touchOffsetY);
+        touchOffsetOutput.x = touchOffsetX;
+        touchOffsetOutput.y = touchOffsetY;
     }
 
-    // Private Methods /////////////////////////////////////////////////////////
+    // Private Methods /////////////////////////////////////////////////////////////////////////////
 
     /**
      * Determines if the specified coordinate is in the target touch zone for a corner handle.
@@ -162,6 +159,7 @@ public class HandleUtil {
                                                 float handleX,
                                                 float handleY,
                                                 float targetRadius) {
+        
         return (Math.abs(x - handleX) <= targetRadius && Math.abs(y - handleY) <= targetRadius);
     }
 
@@ -231,18 +229,5 @@ public class HandleUtil {
                                                 float bottom) {
 
         return (x > left && x < right && y > top && y < bottom);
-    }
-
-    /**
-     * Determines if the cropper should focus on the center handle or the side handles. If it is a
-     * small image, focus on the center handle so the user can move it. If it is a large image,
-     * focus on the side handles so user can grab them. Corresponds to the appearance of the
-     * RuleOfThirdsGuidelines.
-     *
-     * @return true if it is small enough such that it should focus on the center; less than
-     * show_guidelines limit
-     */
-    private static boolean focusCenter() {
-        return (!CropOverlayView.showGuidelines());
     }
 }
