@@ -37,7 +37,7 @@ import com.edmodo.cropper.util.PaintUtil;
  */
 public class CropOverlayView extends View {
 
-    // Private Constants ///////////////////////////////////////////////////////
+    // Private Constants ///////////////////////////////////////////////////////////////////////////
 
     // 'mGuidelinesMode' enumerations
     @SuppressWarnings("unused")
@@ -45,7 +45,7 @@ public class CropOverlayView extends View {
     private static final int GUIDELINES_ON_TOUCH = 1;
     private static final int GUIDELINES_ON = 2;
 
-    // Member Variables ////////////////////////////////////////////////////////
+    // Member Variables ////////////////////////////////////////////////////////////////////////////
 
     // The Paint used to draw the white rectangle around the crop area.
     private Paint mBorderPaint;
@@ -92,15 +92,14 @@ public class CropOverlayView extends View {
     // The Handle that is currently pressed; null if no Handle is pressed.
     private Handle mPressedHandle;
 
-    // Flag indicating if the crop area should always be a certain aspect ratio
-    // (indicated by mTargetAspectRatio).
+    // Flag indicating if the crop area should always be a certain aspect ratio (indicated by mTargetAspectRatio).
     private boolean mFixAspectRatio;
 
     // Current aspect ratio of the image.
     private int mAspectRatioX = 1;
     private int mAspectRatioY = 1;
 
-    // Instance variables for customizable attributes
+    // Mode indicating how/whether to show the guidelines; must be one of GUIDELINES_OFF, GUIDELINES_ON_TOUCH, GUIDELINES_ON.
     private int mGuidelinesMode;
 
     // Whether the Crop View has been initialized for the first time
@@ -207,7 +206,6 @@ public class CropOverlayView extends View {
      * Resets the crop overlay view.
      */
     public void resetCropOverlayView() {
-
         if (initializedCropWindow) {
             initCropWindow(mBitmapRect);
             invalidate();
@@ -254,18 +252,15 @@ public class CropOverlayView extends View {
      */
     public void setAspectRatioX(int aspectRatioX) {
 
-        if (aspectRatioX <= 0)
-
+        if (aspectRatioX <= 0) {
             throw new IllegalArgumentException("Cannot set aspect ratio value to a number less than or equal to 0.");
+        }
 
-        else {
+        mAspectRatioX = aspectRatioX;
 
-            mAspectRatioX = aspectRatioX;
-
-            if (initializedCropWindow) {
-                initCropWindow(mBitmapRect);
-                invalidate();
-            }
+        if (initializedCropWindow) {
+            initCropWindow(mBitmapRect);
+            invalidate();
         }
     }
 
@@ -276,18 +271,16 @@ public class CropOverlayView extends View {
      */
     public void setAspectRatioY(int aspectRatioY) {
 
-        if (aspectRatioY <= 0)
-
+        if (aspectRatioY <= 0) {
             throw new IllegalArgumentException("Cannot set aspect ratio value to a number less than or equal to 0.");
 
-        else {
+        }
+        
+        mAspectRatioY = aspectRatioY;
 
-            mAspectRatioY = aspectRatioY;
-
-            if (initializedCropWindow) {
-                initCropWindow(mBitmapRect);
-                invalidate();
-            }
+        if (initializedCropWindow) {
+            initCropWindow(mBitmapRect);
+            invalidate();
         }
     }
 
@@ -316,7 +309,7 @@ public class CropOverlayView extends View {
         mAspectRatioY = aspectRatioY;
     }
 
-    // Private Methods /////////////////////////////////////////////////////////
+    // Private Methods /////////////////////////////////////////////////////////////////////////////
 
     /**
      * Set the initial crop window size and position. This is dependent on the size and position of
