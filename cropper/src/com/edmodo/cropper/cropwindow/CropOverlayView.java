@@ -246,36 +246,15 @@ public class CropOverlayView extends View {
     }
 
     /**
-     * Sets the X value of the aspect ratio; is defaulted to 1.
-     *
-     * @param aspectRatioX int that specifies the new X value of the aspect ratio
+     * Sets the aspect ratio.
      */
-    public void setAspectRatioX(int aspectRatioX) {
+    public void setAspectRatio(int aspectRatioX, int aspectRatioY) {
 
-        if (aspectRatioX <= 0) {
+        if (aspectRatioX <= 0 || aspectRatioY <= 0) {
             throw new IllegalArgumentException("Cannot set aspect ratio value to a number less than or equal to 0.");
         }
 
         mAspectRatioX = aspectRatioX;
-
-        if (initializedCropWindow) {
-            initCropWindow(mBitmapRect);
-            invalidate();
-        }
-    }
-
-    /**
-     * Sets the Y value of the aspect ratio; is defaulted to 1.
-     *
-     * @param aspectRatioY int that specifies the new Y value of the aspect ratio
-     */
-    public void setAspectRatioY(int aspectRatioY) {
-
-        if (aspectRatioY <= 0) {
-            throw new IllegalArgumentException("Cannot set aspect ratio value to a number less than or equal to 0.");
-
-        }
-        
         mAspectRatioY = aspectRatioY;
 
         if (initializedCropWindow) {

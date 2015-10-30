@@ -41,13 +41,14 @@ import com.edmodo.cropper.util.ImageViewUtil;
  */
 public class CropImageView extends FrameLayout {
 
-    // Private Constants ///////////////////////////////////////////////////////
+    // Private Constants ///////////////////////////////////////////////////////////////////////////
+
+    private static final String STATE_SAVED_INSTANCE = "STATE_SAVED_INSTANCE";
+    private static final String STATE_DEGREES_ROTATED = "STATE_DEGREES_ROTATED";
 
     private static final Rect EMPTY_RECT = new Rect();
 
-    // Member Variables ////////////////////////////////////////////////////////
-
-    private static final String DEGREES_ROTATED = "DEGREES_ROTATED";
+    // Member Variables ////////////////////////////////////////////////////////////////////////////
 
     private ImageView mImageView;
     private CropOverlayView mCropOverlayView;
@@ -59,13 +60,9 @@ public class CropImageView extends FrameLayout {
     private int mLayoutHeight;
 
     // Instance variables for customizable attributes
-    private int mGuidelines = 1;
-    private boolean mFixAspectRatio;
-    private int mAspectRatioX = 1;
-    private int mAspectRatioY = 1;
     private int mImageResource;
 
-    // Constructors ////////////////////////////////////////////////////////////
+    // Constructors ////////////////////////////////////////////////////////////////////////////////
 
     public CropImageView(Context context) {
         super(context);
@@ -92,32 +89,28 @@ public class CropImageView extends FrameLayout {
 
         final TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.CropImageView, 0, 0);
 
-        try {
-            mGuidelines = ta.getInteger(R.styleable.CropImageView_guidelines, 1);
-            mFixAspectRatio = ta.getBoolean(R.styleable.CropImageView_fixAspectRatio, false);
-            mAspectRatioX = ta.getInteger(R.styleable.CropImageView_aspectRatioX, 1);
-            mAspectRatioY = ta.getInteger(R.styleable.CropImageView_aspectRatioY, 1);
-            mImageResource = ta.getResourceId(R.styleable.CropImageView_imageResource, 0);
-        } finally {
-            ta.recycle();
-        }
+        final int guidelinesMode = ta.getInteger(R.styleable.CropImageView_guidelines, 1);
+        final boolean fixAspectRatio = ta.getBoolean(R.styleable.CropImageView_fixAspectRatio, false);
+        final int aspectRatioX = ta.getInteger(R.styleable.CropImageView_aspectRatioX, 1);
+        final int aspectRatioY = ta.getInteger(R.styleable.CropImageView_aspectRatioY, 1);
+        mImageResource = ta.getResourceId(R.styleable.CropImageView_imageResource, 0);
+        ta.recycle();
 
         setImageResource(mImageResource);
-        mCropOverlayView.setInitialAttributeValues(mGuidelines, mFixAspectRatio, mAspectRatioX, mAspectRatioY);
+        mCropOverlayView.setInitialAttributeValues(guidelinesMode, fixAspectRatio, aspectRatioX, aspectRatioY);
     }
 
-    // View Methods ////////////////////////////////////////////////////////////
+    // View Methods ////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public Parcelable onSaveInstanceState() {
 
         final Bundle bundle = new Bundle();
 
-        bundle.putParcelable("instanceState", super.onSaveInstanceState());
-        bundle.putInt(DEGREES_ROTATED, mDegreesRotated);
+        bundle.putParcelable(STATE_SAVED_INSTANCE, super.onSaveInstanceState());
+        bundle.putInt(STATE_DEGREES_ROTATED, mDegreesRotated);
 
         return bundle;
-
     }
 
     @Override
@@ -128,16 +121,18 @@ public class CropImageView extends FrameLayout {
             final Bundle bundle = (Bundle) state;
 
             if (mBitmap != null) {
+
                 // Fixes the rotation of the image when orientation changes.
-                mDegreesRotated = bundle.getInt(DEGREES_ROTATED);
-                int tempDegrees = mDegreesRotated;
+                mDegreesRotated = bundle.getInt(STATE_DEGREES_ROTATED);
+                final int tempDegrees = mDegreesRotated;
                 rotateImage(mDegreesRotated);
                 mDegreesRotated = tempDegrees;
             }
 
-            super.onRestoreInstanceState(bundle.getParcelable("instanceState"));
+            super.onRestoreInstanceState(bundle.getParcelable(STATE_SAVED_INSTANCE));
 
         } else {
+
             super.onRestoreInstanceState(state);
         }
     }
@@ -239,7 +234,7 @@ public class CropImageView extends FrameLayout {
         }
     }
 
-    // Public Methods //////////////////////////////////////////////////////////
+    // Public Methods //////////////////////////////////////////////////////////////////////////////
 
     /**
      * Returns the integer of the imageResource
@@ -361,13 +356,11 @@ public class CropImageView extends FrameLayout {
         final float actualCropHeight = cropWindowHeight * scaleFactorHeight;
 
         // Crop the subset from the original Bitmap.
-        final Bitmap croppedBitmap = Bitmap.createBitmap(mBitmap,
-                                                         (int) actualCropX,
-                                                         (int) actualCropY,
-                                                         (int) actualCropWidth,
-                                                         (int) actualCropHeight);
-
-        return croppedBitmap;
+        return Bitmap.createBitmap(mBitmap,
+                                   (int) actualCropX,
+                                   (int) actualCropY,
+                                   (int) actualCropWidth,
+                                   (int) actualCropHeight);
     }
 
     /**
@@ -444,14 +437,10 @@ public class CropImageView extends FrameLayout {
      * Sets the both the X and Y values of the aspectRatio.
      *
      * @param aspectRatioX int that specifies the new X value of the aspect ratio
-     * @param aspectRatioX int that specifies the new Y value of the aspect ratio
+     * @param aspectRatioY int that specifies the new Y value of the aspect ratio
      */
     public void setAspectRatio(int aspectRatioX, int aspectRatioY) {
-        mAspectRatioX = aspectRatioX;
-        mCropOverlayView.setAspectRatioX(mAspectRatioX);
-
-        mAspectRatioY = aspectRatioY;
-        mCropOverlayView.setAspectRatioY(mAspectRatioY);
+        mCropOverlayView.setAspectRatio(aspectRatioX, aspectRatioY);
     }
 
     /**
@@ -461,7 +450,7 @@ public class CropImageView extends FrameLayout {
      */
     public void rotateImage(int degrees) {
 
-        Matrix matrix = new Matrix();
+        final Matrix matrix = new Matrix();
         matrix.postRotate(degrees);
         mBitmap = Bitmap.createBitmap(mBitmap, 0, 0, mBitmap.getWidth(), mBitmap.getHeight(), matrix, true);
         setImageBitmap(mBitmap);
@@ -470,7 +459,7 @@ public class CropImageView extends FrameLayout {
         mDegreesRotated = mDegreesRotated % 360;
     }
 
-    // Private Methods /////////////////////////////////////////////////////////
+    // Private Methods /////////////////////////////////////////////////////////////////////////////
 
     /**
      * Determines the specs for the onMeasure function. Calculates the width or height depending on
