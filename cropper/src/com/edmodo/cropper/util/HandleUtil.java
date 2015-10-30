@@ -47,33 +47,60 @@ public class HandleUtil {
                                           float bottom,
                                           float targetRadius) {
 
-        final Handle pressedHandle;
+        // Find the closest corner handle to the touch point.
+        // If the touch point is in the target zone of this closest handle, then this is the pressed handle.
+        // Else, check if any of the edges are in the target zone of the touch point.
+        // Else, check if the touch point is within the crop window bounds; if so, then choose the center handle.
 
-        // Note: center handle takes precedence, then corner-handles, then side-handles.
+        Handle closestHandle = null;
+        float closestDistance = Float.POSITIVE_INFINITY;
 
-        if (HandleUtil.isInCenterTargetZone(x, y, left, top, right, bottom)) {
-            pressedHandle = Handle.CENTER;
-        } else if (HandleUtil.isInCornerTargetZone(x, y, left, top, targetRadius)) {
-            pressedHandle = Handle.TOP_LEFT;
-        } else if (HandleUtil.isInCornerTargetZone(x, y, right, top, targetRadius)) {
-            pressedHandle = Handle.TOP_RIGHT;
-        } else if (HandleUtil.isInCornerTargetZone(x, y, left, bottom, targetRadius)) {
-            pressedHandle = Handle.BOTTOM_LEFT;
-        } else if (HandleUtil.isInCornerTargetZone(x, y, right, bottom, targetRadius)) {
-            pressedHandle = Handle.BOTTOM_RIGHT;
-        } else if (HandleUtil.isInHorizontalTargetZone(x, y, left, right, top, targetRadius)) {
-            pressedHandle = Handle.TOP;
-        } else if (HandleUtil.isInHorizontalTargetZone(x, y, left, right, bottom, targetRadius)) {
-            pressedHandle = Handle.BOTTOM;
-        } else if (HandleUtil.isInVerticalTargetZone(x, y, left, top, bottom, targetRadius)) {
-            pressedHandle = Handle.LEFT;
-        } else if (HandleUtil.isInVerticalTargetZone(x, y, right, top, bottom, targetRadius)) {
-            pressedHandle = Handle.RIGHT;
-        } else {
-            pressedHandle = null;
+        final float distanceToTopLeft = MathUtil.calculateDistance(x, y, left, top);
+        if (distanceToTopLeft < closestDistance) {
+            closestDistance = distanceToTopLeft;
+            closestHandle = Handle.TOP_LEFT;
         }
 
-        return pressedHandle;
+        final float distanceToTopRight = MathUtil.calculateDistance(x, y, right, top);
+        if (distanceToTopRight < closestDistance) {
+            closestDistance = distanceToTopRight;
+            closestHandle = Handle.TOP_RIGHT;
+        }
+
+        final float distanceToBottomLeft = MathUtil.calculateDistance(x, y, left, bottom);
+        if (distanceToBottomLeft < closestDistance) {
+            closestDistance = distanceToBottomLeft;
+            closestHandle = Handle.BOTTOM_LEFT;
+        }
+
+        final float distanceToBottomRight = MathUtil.calculateDistance(x, y, right, bottom);
+        if (distanceToBottomRight < closestDistance) {
+            closestDistance = distanceToBottomRight;
+            closestHandle = Handle.BOTTOM_RIGHT;
+        }
+
+        if (closestDistance <= targetRadius) {
+            return closestHandle;
+        }
+
+        // If we get to this point, none of the corner handles were in the touch target zone, so then we check the edges.
+        if (HandleUtil.isInHorizontalTargetZone(x, y, left, right, top, targetRadius)) {
+            return Handle.TOP;
+        } else if (HandleUtil.isInHorizontalTargetZone(x, y, left, right, bottom, targetRadius)) {
+            return Handle.BOTTOM;
+        } else if (HandleUtil.isInVerticalTargetZone(x, y, left, top, bottom, targetRadius)) {
+            return Handle.LEFT;
+        } else if (HandleUtil.isInVerticalTargetZone(x, y, right, top, bottom, targetRadius)) {
+            return Handle.RIGHT;
+        }
+
+        // If we get to this point, none of the corners or edges are in the touch target zone.
+        // Check to see if the touch point is within the bounds of the crop window. If so, choose the center handle.
+        if (isWithinBounds(x, y, left, top, right, bottom)) {
+            return Handle.CENTER;
+        }
+
+        return null;
     }
 
     /**
@@ -144,26 +171,6 @@ public class HandleUtil {
     // Private Methods /////////////////////////////////////////////////////////////////////////////
 
     /**
-     * Determines if the specified coordinate is in the target touch zone for a corner handle.
-     *
-     * @param x            the x-coordinate of the touch point
-     * @param y            the y-coordinate of the touch point
-     * @param handleX      the x-coordinate of the corner handle
-     * @param handleY      the y-coordinate of the corner handle
-     * @param targetRadius the target radius in pixels
-     *
-     * @return true if the touch point is in the target touch zone; false otherwise
-     */
-    private static boolean isInCornerTargetZone(float x,
-                                                float y,
-                                                float handleX,
-                                                float handleY,
-                                                float targetRadius) {
-        
-        return (Math.abs(x - handleX) <= targetRadius && Math.abs(y - handleY) <= targetRadius);
-    }
-
-    /**
      * Determines if the specified coordinate is in the target touch zone for a horizontal bar
      * handle.
      *
@@ -209,25 +216,7 @@ public class HandleUtil {
         return (Math.abs(x - handleX) <= targetRadius && y > handleYStart && y < handleYEnd);
     }
 
-    /**
-     * Determines if the specified coordinate falls anywhere inside the given bounds.
-     *
-     * @param x      the x-coordinate of the touch point
-     * @param y      the y-coordinate of the touch point
-     * @param left   the x-coordinate of the left bound
-     * @param top    the y-coordinate of the top bound
-     * @param right  the x-coordinate of the right bound
-     * @param bottom the y-coordinate of the bottom bound
-     *
-     * @return true if the touch point is inside the bounding rectangle; false otherwise
-     */
-    private static boolean isInCenterTargetZone(float x,
-                                                float y,
-                                                float left,
-                                                float top,
-                                                float right,
-                                                float bottom) {
-
-        return (x > left && x < right && y > top && y < bottom);
+    private static boolean isWithinBounds(float x, float y, float left, float top, float right, float bottom) {
+        return x >= left && x <= right && y >= top && y <= bottom;
     }
 }

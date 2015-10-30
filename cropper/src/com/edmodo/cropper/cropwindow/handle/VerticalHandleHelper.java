@@ -77,7 +77,7 @@ class VerticalHandleHelper extends HandleHelper {
 
         if (Edge.BOTTOM.isOutsideMargin(imageRect, snapRadius)
                 && !mEdge.isNewRectangleOutOfBounds(Edge.BOTTOM, imageRect, targetAspectRatio)) {
-            
+
             final float offset = Edge.BOTTOM.snapToRect(imageRect);
             Edge.TOP.offset(-offset);
             mEdge.adjustCoordinate(targetAspectRatio);
