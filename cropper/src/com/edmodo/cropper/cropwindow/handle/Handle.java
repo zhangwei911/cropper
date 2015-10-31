@@ -13,7 +13,7 @@
 
 package com.edmodo.cropper.cropwindow.handle;
 
-import android.graphics.Rect;
+import android.graphics.RectF;
 import android.support.annotation.NonNull;
 
 import com.edmodo.cropper.cropwindow.edge.Edge;
@@ -47,7 +47,7 @@ public enum Handle {
 
     public void updateCropWindow(float x,
                                  float y,
-                                 @NonNull Rect imageRect,
+                                 @NonNull RectF imageRect,
                                  float snapRadius) {
 
         mHelper.updateCropWindow(x, y, imageRect, snapRadius);
@@ -56,7 +56,7 @@ public enum Handle {
     public void updateCropWindow(float x,
                                  float y,
                                  float targetAspectRatio,
-                                 @NonNull Rect imageRect,
+                                 @NonNull RectF imageRect,
                                  float snapRadius) {
 
         mHelper.updateCropWindow(x, y, targetAspectRatio, imageRect, snapRadius);

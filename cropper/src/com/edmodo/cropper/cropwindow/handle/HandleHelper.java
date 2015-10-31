@@ -13,7 +13,7 @@
 
 package com.edmodo.cropper.cropwindow.handle;
 
-import android.graphics.Rect;
+import android.graphics.RectF;
 import android.support.annotation.NonNull;
 
 import com.edmodo.cropper.cropwindow.edge.Edge;
@@ -35,7 +35,7 @@ abstract class HandleHelper {
     // a new Object every time getActiveEdges() is called.
     private EdgePair mActiveEdges;
 
-    // Constructor /////////////////////////////////////////////////////////////
+    // Constructor /////////////////////////////////////////////////////////////////////////////////
 
     /**
      * Constructor.
@@ -49,7 +49,7 @@ abstract class HandleHelper {
         mActiveEdges = new EdgePair(mHorizontalEdge, mVerticalEdge);
     }
 
-    // Package-Private Methods /////////////////////////////////////////////////
+    // Package-Private Methods /////////////////////////////////////////////////////////////////////
 
     /**
      * Updates the crop window by directly setting the Edge coordinates.
@@ -62,7 +62,7 @@ abstract class HandleHelper {
      */
     void updateCropWindow(float x,
                           float y,
-                          @NonNull Rect imageRect,
+                          @NonNull RectF imageRect,
                           float snapRadius) {
 
         final EdgePair activeEdges = getActiveEdges();
@@ -90,7 +90,7 @@ abstract class HandleHelper {
     abstract void updateCropWindow(float x,
                                    float y,
                                    float targetAspectRatio,
-                                   @NonNull Rect imageRect,
+                                   @NonNull RectF imageRect,
                                    float snapRadius);
 
     /**
@@ -131,7 +131,7 @@ abstract class HandleHelper {
         return mActiveEdges;
     }
 
-    // Private Methods /////////////////////////////////////////////////////////
+    // Private Methods /////////////////////////////////////////////////////////////////////////////
 
     /**
      * Gets the aspect ratio of the resulting crop window if this handle were dragged to the given

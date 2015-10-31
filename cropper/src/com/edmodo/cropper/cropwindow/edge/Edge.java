@@ -13,7 +13,7 @@
 
 package com.edmodo.cropper.cropwindow.edge;
 
-import android.graphics.Rect;
+import android.graphics.RectF;
 import android.support.annotation.NonNull;
 
 import com.edmodo.cropper.util.AspectRatioUtil;
@@ -80,7 +80,7 @@ public enum Edge {
      * @param imageRect       the bounding rectangle of the image
      * @param imageSnapRadius the radius (in pixels) at which the edge should snap to the image
      */
-    public void adjustCoordinate(float x, float y, Rect imageRect, float imageSnapRadius, float aspectRatio) {
+    public void adjustCoordinate(float x, float y, @NonNull RectF imageRect, float imageSnapRadius, float aspectRatio) {
 
         switch (this) {
             case LEFT:
@@ -137,7 +137,7 @@ public enum Edge {
      *
      * @return whether or not the new image would be out of bounds.
      */
-    public boolean isNewRectangleOutOfBounds(@NonNull Edge edge, @NonNull Rect imageRect, float aspectRatio) {
+    public boolean isNewRectangleOutOfBounds(@NonNull Edge edge, @NonNull RectF imageRect, float aspectRatio) {
 
         final float offset = edge.snapOffset(imageRect);
 
@@ -242,7 +242,7 @@ public enum Edge {
      *
      * @return whether it would be out of bounds
      */
-    private boolean isOutOfBounds(float top, float left, float bottom, float right, @NonNull Rect imageRect) {
+    private boolean isOutOfBounds(float top, float left, float bottom, float right, @NonNull RectF imageRect) {
         return (top < imageRect.top || left < imageRect.left || bottom > imageRect.bottom || right > imageRect.right);
     }
 
@@ -254,7 +254,7 @@ public enum Edge {
      * @return the amount (in pixels) that this coordinate was changed (i.e. the new coordinate
      * minus the old coordinate value)
      */
-    public float snapToRect(@NonNull Rect imageRect) {
+    public float snapToRect(@NonNull RectF imageRect) {
 
         final float oldCoordinate = mCoordinate;
 
@@ -284,7 +284,7 @@ public enum Edge {
      * @return the amount (in pixels) that this coordinate was changed (i.e. the new coordinate
      * minus the old coordinate value)
      */
-    public float snapOffset(@NonNull Rect imageRect) {
+    public float snapOffset(@NonNull RectF imageRect) {
 
         final float oldCoordinate = mCoordinate;
         final float newCoordinate;
@@ -326,7 +326,7 @@ public enum Edge {
      * margins come inside the actual frame by SNAPRADIUS amount; therefore, determines if the point
      * is outside the inner "margin" frame.
      */
-    public boolean isOutsideMargin(@NonNull Rect rect, float margin) {
+    public boolean isOutsideMargin(@NonNull RectF rect, float margin) {
 
         final boolean result;
 
@@ -359,7 +359,7 @@ public enum Edge {
      *
      * @return the actual x-position of the left edge
      */
-    private static float adjustLeft(float x, @NonNull Rect imageRect, float imageSnapRadius, float aspectRatio) {
+    private static float adjustLeft(float x, @NonNull RectF imageRect, float imageSnapRadius, float aspectRatio) {
 
         final float resultX;
 
@@ -396,7 +396,7 @@ public enum Edge {
      *
      * @return the actual x-position of the right edge
      */
-    private static float adjustRight(float x, Rect imageRect, float imageSnapRadius, float aspectRatio) {
+    private static float adjustRight(float x, @NonNull RectF imageRect, float imageSnapRadius, float aspectRatio) {
 
         final float resultX;
 
@@ -434,7 +434,7 @@ public enum Edge {
      *
      * @return the actual y-position of the top edge
      */
-    private static float adjustTop(float y, Rect imageRect, float imageSnapRadius, float aspectRatio) {
+    private static float adjustTop(float y, @NonNull RectF imageRect, float imageSnapRadius, float aspectRatio) {
 
         final float resultY;
 
@@ -471,7 +471,7 @@ public enum Edge {
      *
      * @return the actual y-position of the bottom edge
      */
-    private static float adjustBottom(float y, Rect imageRect, float imageSnapRadius, float aspectRatio) {
+    private static float adjustBottom(float y, @NonNull RectF imageRect, float imageSnapRadius, float aspectRatio) {
 
         final float resultY;
 
