@@ -94,16 +94,14 @@ public class AspectRatioUtil {
     /**
      * Calculates the width of a rectangle given the top and bottom edges and an aspect ratio.
      */
-    public static float calculateWidth(float top, float bottom, float targetAspectRatio) {
-        final float height = bottom - top;
+    public static float calculateWidth(float height, float targetAspectRatio) {
         return targetAspectRatio * height;
     }
 
     /**
      * Calculates the height of a rectangle given the left and right edges and an aspect ratio.
      */
-    public static float calculateHeight(float left, float right, float targetAspectRatio) {
-        final float width = right - left;
+    public static float calculateHeight(float width, float targetAspectRatio) {
         return width / targetAspectRatio;
     }
 }

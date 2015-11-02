@@ -3,9 +3,9 @@
     <declare-styleable name="CropImageView">
 
         <attr name="guidelines">
-            <enum name="on" value="2"/>
-            <enum name="onTouch" value="1"/>
             <enum name="off" value="0"/>
+            <enum name="onTouch" value="1"/>
+            <enum name="on" value="2"/>
         </attr>
 
         <attr name="fixAspectRatio" format="boolean"/>

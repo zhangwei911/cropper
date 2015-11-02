@@ -27,7 +27,6 @@ import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.ImageView;
 
@@ -144,7 +143,6 @@ public class CropImageView extends ImageView {
 
         mHandleRadius = resources.getDimension(R.dimen.target_radius);
         mSnapRadius = resources.getDimension(R.dimen.snap_radius);
-
         mBorderThickness = resources.getDimension(R.dimen.border_thickness);
         mCornerThickness = resources.getDimension(R.dimen.corner_thickness);
         mCornerLength = resources.getDimension(R.dimen.corner_length);
@@ -152,28 +150,11 @@ public class CropImageView extends ImageView {
 
     // View Methods ////////////////////////////////////////////////////////////////////////////////
 
-    // TODO
-    @Override
-    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        Log.d(TAG, "onSizeChanged()");
-        super.onSizeChanged(w, h, oldw, oldh);
-        getBitmapRect();
-    }
-
-    // TODO
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-
-        Log.d(TAG, "onMeasure()");
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-
-        getBitmapRect();
-    }
-
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-        Log.d(TAG, "onLayout()"); // TODO
+
         super.onLayout(changed, left, top, right, bottom);
+
         mBitmapRect = getBitmapRect();
         initCropWindow(mBitmapRect);
     }
@@ -181,7 +162,6 @@ public class CropImageView extends ImageView {
     @Override
     protected void onDraw(Canvas canvas) {
 
-        Log.d(TAG, "onDraw()"); // TODO
         super.onDraw(canvas);
 
         drawDarkenedSurroundingArea(canvas);
@@ -239,6 +219,8 @@ public class CropImageView extends ImageView {
      * allows it to be changed.
      *
      * @param fixAspectRatio Boolean that signals whether the aspect ratio should be maintained.
+     *
+     * @see {@link #setAspectRatio(int, int)}
      */
     public void setFixedAspectRatio(boolean fixAspectRatio) {
         mFixAspectRatio = fixAspectRatio;
@@ -246,21 +228,25 @@ public class CropImageView extends ImageView {
     }
 
     /**
-     * Sets the both the X and Y values of the aspectRatio.
+     * Sets the both the X and Y values of the aspectRatio. These only apply iff fixed aspect ratio
+     * is set.
      *
      * @param aspectRatioX new X value of the aspect ratio; must be greater than 0
      * @param aspectRatioY new Y value of the aspect ratio; must be greater than 0
+     *
+     * @see {@link #setFixedAspectRatio(boolean)}
      */
     public void setAspectRatio(int aspectRatioX, int aspectRatioY) {
 
         if (aspectRatioX <= 0 || aspectRatioY <= 0) {
             throw new IllegalArgumentException("Cannot set aspect ratio value to a number less than or equal to 0.");
         }
-
         mAspectRatioX = aspectRatioX;
         mAspectRatioY = aspectRatioY;
 
-        requestLayout(); // Request measure/layout to be run again.
+        if (mFixAspectRatio) {
+            requestLayout(); // Request measure/layout to be run again.
+        }
     }
 
     /**
@@ -270,45 +256,40 @@ public class CropImageView extends ImageView {
      */
     public Bitmap getCroppedImage() {
 
+        // Implementation reference: http://stackoverflow.com/a/26930938/1068656
+
         final Drawable drawable = getDrawable();
         if (drawable == null || !(drawable instanceof BitmapDrawable)) {
             return null;
         }
 
-        // Get image dimensions
-        // Get image matrix values and place them in an array
+        // Get image matrix values and place them in an array.
         final float[] matrixValues = new float[9];
         getImageMatrix().getValues(matrixValues);
 
-        // Extract the scale values using the constants (if aspect ratio maintained, scaleX == scaleY)
+        // Extract the scale and translation values. Note, we currently do not handle any other transformations (e.g. skew).
         final float scaleX = matrixValues[Matrix.MSCALE_X];
         final float scaleY = matrixValues[Matrix.MSCALE_Y];
         final float transX = matrixValues[Matrix.MTRANS_X];
         final float transY = matrixValues[Matrix.MTRANS_Y];
 
+        // Ensure that the left and top edges are not outside of the ImageView bounds.
         final float bitmapLeft = (transX < 0) ? Math.abs(transX) : 0;
         final float bitmapTop = (transY < 0) ? Math.abs(transY) : 0;
 
-        Log.e(TAG, "bitmapLeft = " + bitmapLeft);
-        Log.e(TAG, "bitmapTop = " + bitmapTop);
-        Log.e(TAG, "Edge.LEFT.getCoordinate() = " + Edge.LEFT.getCoordinate());
-        Log.e(TAG, "Edge.TOP.getCoordinate() = " + Edge.TOP.getCoordinate());
-
+        // Get the original bitmap object.
         final Bitmap originalBitmap = ((BitmapDrawable) drawable).getBitmap();
 
+        // Calculate the top-left corner of the crop window relative to the ~original~ bitmap size.
         final float cropX = (bitmapLeft + Edge.LEFT.getCoordinate()) / scaleX;
         final float cropY = (bitmapTop + Edge.TOP.getCoordinate()) / scaleY;
+
+        // Calculate the crop window size relative to the ~original~ bitmap size.
+        // Make sure the right and bottom edges are not outside the ImageView bounds (this is just to address rounding discrepancies).
         final float cropWidth = Math.min(Edge.getWidth() / scaleX, originalBitmap.getWidth() - cropX);
         final float cropHeight = Math.min(Edge.getHeight() / scaleY, originalBitmap.getHeight() - cropY);
 
-        Log.e(TAG, "cropX = " + cropX);
-        Log.e(TAG, "cropY = " + cropY);
-        Log.e(TAG, "cropWidth = " + cropWidth);
-        Log.e(TAG, "cropHeight = " + cropHeight);
-
         // Crop the subset from the original Bitmap.
-        Log.e(TAG, "originalBitmap.getWidth() = " + originalBitmap.getWidth());
-        Log.e(TAG, "originalBitmap.getHeight() = " + originalBitmap.getHeight());
         return Bitmap.createBitmap(originalBitmap,
                                    (int) cropX,
                                    (int) cropY,
@@ -318,6 +299,9 @@ public class CropImageView extends ImageView {
 
     // Private Methods /////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Gets the bounding rectangle of the bitmap within the ImageView.
+     */
     private RectF getBitmapRect() {
 
         final Drawable drawable = getDrawable();
@@ -325,28 +309,25 @@ public class CropImageView extends ImageView {
             return new RectF();
         }
 
-        // Get image dimensions
-        // Get image matrix values and place them in an array
+        // Get image matrix values and place them in an array.
         final float[] matrixValues = new float[9];
         getImageMatrix().getValues(matrixValues);
 
-        // Extract the scale values using the constants (if aspect ratio maintained, scaleX == scaleY)
+        // Extract the scale and translation values from the matrix.
         final float scaleX = matrixValues[Matrix.MSCALE_X];
         final float scaleY = matrixValues[Matrix.MSCALE_Y];
         final float transX = matrixValues[Matrix.MTRANS_X];
         final float transY = matrixValues[Matrix.MTRANS_Y];
 
-        Log.e(TAG, "scale: " + scaleX + ", " + scaleY);
-        Log.e(TAG, "trans: " + transX + ", " + transY);
-
-        // Get the drawable (could also get the bitmap behind the drawable and getWidth/getHeight)
+        // Get the width and height of the original bitmap.
         final int drawableIntrinsicWidth = drawable.getIntrinsicWidth();
         final int drawableIntrinsicHeight = drawable.getIntrinsicHeight();
 
-        // Calculate the actual dimensions
+        // Calculate the dimensions as seen on screen.
         final int drawableDisplayWidth = Math.round(drawableIntrinsicWidth * scaleX);
         final int drawableDisplayHeight = Math.round(drawableIntrinsicHeight * scaleY);
 
+        // Get the Rect of the displayed image within the ImageView.
         final float left = Math.max(transX, 0);
         final float top = Math.max(transY, 0);
         final float right = Math.min(left + drawableDisplayWidth, getWidth());
@@ -355,6 +336,13 @@ public class CropImageView extends ImageView {
         return new RectF(left, top, right, bottom);
     }
 
+    /**
+     * Initialize the crop window by setting the proper {@link Edge} values.
+     * <p/>
+     * If fixed aspect ratio is turned off, the initial crop window will be set to the displayed
+     * image with 10% margin. If fixed aspect ratio is turned on, the initial crop window will
+     * conform to the aspect ratio with at least one dimension maximized.
+     */
     private void initCropWindow(@NonNull RectF bitmapRect) {
 
         if (mFixAspectRatio) {
@@ -381,9 +369,7 @@ public class CropImageView extends ImageView {
         // then the image height is the determining initial length. Else, vice-versa.
         if (AspectRatioUtil.calculateAspectRatio(bitmapRect) > getTargetAspectRatio()) {
 
-            final float cropWidth = AspectRatioUtil.calculateWidth(Edge.TOP.getCoordinate(),
-                                                                   Edge.BOTTOM.getCoordinate(),
-                                                                   getTargetAspectRatio());
+            final float cropWidth = AspectRatioUtil.calculateWidth(bitmapRect.height(), getTargetAspectRatio());
 
             Edge.LEFT.setCoordinate(bitmapRect.centerX() - cropWidth / 2f);
             Edge.TOP.setCoordinate(bitmapRect.top);
@@ -392,9 +378,7 @@ public class CropImageView extends ImageView {
 
         } else {
 
-            final float cropHeight = AspectRatioUtil.calculateHeight(Edge.LEFT.getCoordinate(),
-                                                                     Edge.RIGHT.getCoordinate(),
-                                                                     getTargetAspectRatio());
+            final float cropHeight = AspectRatioUtil.calculateHeight(bitmapRect.width(), getTargetAspectRatio());
 
             Edge.LEFT.setCoordinate(bitmapRect.left);
             Edge.TOP.setCoordinate(bitmapRect.centerY() - cropHeight / 2f);

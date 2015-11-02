@@ -47,18 +47,15 @@ class VerticalHandleHelper extends HandleHelper {
         // Adjust this Edge accordingly.
         mEdge.adjustCoordinate(x, y, imageRect, snapRadius, targetAspectRatio);
 
-        float left = Edge.LEFT.getCoordinate();
         float top = Edge.TOP.getCoordinate();
-        float right = Edge.RIGHT.getCoordinate();
         float bottom = Edge.BOTTOM.getCoordinate();
 
         // After this Edge is moved, our crop window is now out of proportion.
-        final float targetHeight = AspectRatioUtil.calculateHeight(left, right, targetAspectRatio);
-        final float currentHeight = bottom - top;
+        final float targetHeight = AspectRatioUtil.calculateHeight(Edge.getWidth(), targetAspectRatio);
 
         // Adjust the crop window so that it maintains the given aspect ratio by
         // moving the adjacent edges symmetrically in or out.
-        final float difference = targetHeight - currentHeight;
+        final float difference = targetHeight - Edge.getHeight();
         final float halfDifference = difference / 2;
         top -= halfDifference;
         bottom += halfDifference;
