@@ -281,8 +281,8 @@ public class CropImageView extends ImageView {
         final Bitmap originalBitmap = ((BitmapDrawable) drawable).getBitmap();
 
         // Calculate the top-left corner of the crop window relative to the ~original~ bitmap size.
-        final float cropX = (bitmapLeft + Edge.LEFT.getCoordinate()) / scaleX;
-        final float cropY = (bitmapTop + Edge.TOP.getCoordinate()) / scaleY;
+        final float cropX = (bitmapLeft + Edge.LEFT.getCoordinate()) / scaleX - (getMeasuredWidth() - originalBitmap.getWidth()) / 2.0f;
+        final float cropY = (bitmapTop + Edge.TOP.getCoordinate()) / scaleY - (getMeasuredHeight() - originalBitmap.getHeight()) / 2.0f;
 
         // Calculate the crop window size relative to the ~original~ bitmap size.
         // Make sure the right and bottom edges are not outside the ImageView bounds (this is just to address rounding discrepancies).
